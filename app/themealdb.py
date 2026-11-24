@@ -7,7 +7,11 @@ MAX_INGREDIENT_SLOTS = 20
 # TheMealDB has one strCategory per meal. Some categories are a meal type, some a
 # diet; the rest (Beef, Seafood, Pasta, Miscellaneous, ...) map to neither.
 MEAL_TYPE_CATEGORIES = {"breakfast", "dessert", "starter", "side"}
-DIET_TAG_CATEGORIES = {"vegetarian", "vegan"}
+# Vegan food is also vegetarian, so a "vegetarian" filter must find vegan recipes.
+DIET_TAGS_BY_CATEGORY = {
+    "vegetarian": ["vegetarian"],
+    "vegan": ["vegan", "vegetarian"],
+}
 
 
 def _clean(value):
@@ -34,7 +38,8 @@ def map_category(category):
     key = _clean(category).lower()
     return {
         "meal_type": key if key in MEAL_TYPE_CATEGORIES else None,
-        "diet_tags": [key] if key in DIET_TAG_CATEGORIES else [],
+        # list() returns a copy, so callers can't modify the shared constant.
+        "diet_tags": list(DIET_TAGS_BY_CATEGORY.get(key, [])),
     }
 
 

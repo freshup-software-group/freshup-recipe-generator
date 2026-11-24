@@ -63,9 +63,17 @@ def test_meal_type_category_sets_meal_type(category):
     assert map_category(category) == {"meal_type": category.lower(), "diet_tags": []}
 
 
-@pytest.mark.parametrize("category", ["Vegetarian", "Vegan"])
-def test_diet_category_sets_diet_tag(category):
-    assert map_category(category) == {"meal_type": None, "diet_tags": [category.lower()]}
+def test_vegetarian_category_sets_vegetarian_tag():
+    assert map_category("Vegetarian") == {"meal_type": None, "diet_tags": ["vegetarian"]}
+
+
+def test_vegan_category_is_also_tagged_vegetarian():
+    assert map_category("Vegan") == {"meal_type": None, "diet_tags": ["vegan", "vegetarian"]}
+
+
+def test_diet_tags_are_a_fresh_list_each_call():
+    map_category("Vegan")["diet_tags"].append("changed")
+    assert map_category("Vegan")["diet_tags"] == ["vegan", "vegetarian"]
 
 
 @pytest.mark.parametrize("category", ["Beef", "Seafood", "Miscellaneous", "Unknown", "", None])
@@ -74,9 +82,11 @@ def test_other_category_sets_neither(category):
 
 
 def test_category_match_ignores_case_and_whitespace():
-    assert map_category("  VEGAN ") == {"meal_type": None, "diet_tags": ["vegan"]}
+    assert map_category("  VEGAN ")["diet_tags"] == ["vegan", "vegetarian"]
 
 
 def test_sample_meals_map_to_expected_categories(sample_meals):
     assert map_category(sample_meals["52767"]["strCategory"])["meal_type"] == "dessert"
-    assert map_category(sample_meals["53150"]["strCategory"])["diet_tags"] == ["vegan"]
+    assert map_category(sample_meals["53150"]["strCategory"])["diet_tags"] == [
+        "vegan", "vegetarian",
+    ]
