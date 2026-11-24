@@ -40,6 +40,25 @@ To load the recipe dataset into the database:
 docker compose exec web python -m app.seed
 ```
 
+## Data source
+
+Recipes come from the free [TheMealDB](https://www.themealdb.com) API, using its
+public test key `1`. It is used for educational and development purposes under
+TheMealDB's terms, through the official API only (no scraping).
+
+From each meal we use:
+
+- **Title** and **instructions**
+- **Category**, mapped to a meal type (Breakfast, Dessert, Starter, Side) or a diet
+  tag (Vegetarian, Vegan; vegan recipes are also tagged vegetarian)
+- Up to **20 ingredients** with their measures
+
+Ingredient names are normalized (lowercase, trimmed, singular) so they match pantry
+items. Text after a comma is kept in the quantity: "egg, beaten" with measure "1" is
+stored as ingredient "egg", quantity "1, beaten".
+
+Recipe data provided by TheMealDB.
+
 ## Running the tests
 
 ```bash
