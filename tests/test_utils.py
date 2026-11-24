@@ -35,6 +35,7 @@ def test_blank_name_becomes_empty_string():
     ("boxes", "box"),           # "-xes"
     ("leaves", "leaf"),         # irregular
     ("cookies", "cookie"),      # irregular ("-ies" rule would give "cooky")
+    ("pies", "pie"),            # irregular ("-ies" rule would give "py")
 ])
 def test_plural_becomes_singular(plural, singular):
     assert normalize_ingredient(plural) == singular

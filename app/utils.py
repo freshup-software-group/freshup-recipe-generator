@@ -7,6 +7,7 @@ _IRREGULAR_PLURALS = {
     "loaves": "loaf",
     "cookies": "cookie",
     "brownies": "brownie",
+    "pies": "pie",
 }
 
 # Words that end in "s" but are already singular (or uncountable).
