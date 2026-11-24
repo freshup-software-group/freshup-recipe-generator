@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from app.themealdb import parse_meal
+from app.themealdb import map_category, parse_meal
 
 SAMPLE_PATH = Path(__file__).parent / "data" / "themealdb_sample.json"
 
@@ -56,3 +56,27 @@ def test_unused_slots_are_skipped(sample_meals):
 def test_whitespace_only_and_null_names_are_skipped():
     meal = make_meal([("   ", "1 tsp"), (None, None), ("Salt", "Pinch")])
     assert parse_meal(meal)["ingredients"] == [("salt", "Pinch")]
+
+
+@pytest.mark.parametrize("category", ["Breakfast", "Dessert", "Starter", "Side"])
+def test_meal_type_category_sets_meal_type(category):
+    assert map_category(category) == {"meal_type": category.lower(), "diet_tags": []}
+
+
+@pytest.mark.parametrize("category", ["Vegetarian", "Vegan"])
+def test_diet_category_sets_diet_tag(category):
+    assert map_category(category) == {"meal_type": None, "diet_tags": [category.lower()]}
+
+
+@pytest.mark.parametrize("category", ["Beef", "Seafood", "Miscellaneous", "Unknown", "", None])
+def test_other_category_sets_neither(category):
+    assert map_category(category) == {"meal_type": None, "diet_tags": []}
+
+
+def test_category_match_ignores_case_and_whitespace():
+    assert map_category("  VEGAN ") == {"meal_type": None, "diet_tags": ["vegan"]}
+
+
+def test_sample_meals_map_to_expected_categories(sample_meals):
+    assert map_category(sample_meals["52767"]["strCategory"])["meal_type"] == "dessert"
+    assert map_category(sample_meals["53150"]["strCategory"])["diet_tags"] == ["vegan"]
