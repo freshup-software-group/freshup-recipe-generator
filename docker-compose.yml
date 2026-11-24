@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-freshup}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freshup}
+      POSTGRES_DB: ${POSTGRES_DB:-freshup}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-freshup}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-freshup}:${POSTGRES_PASSWORD:-freshup}@db:5432/${POSTGRES_DB:-freshup}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      FLASK_ENV: ${FLASK_ENV:-development}
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+
+volumes:
+  pgdata:
