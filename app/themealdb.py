@@ -14,9 +14,16 @@ USER_AGENT = "recipe-loader/1.0"
 # TheMealDB stores ingredients in numbered slots strIngredient1..20 / strMeasure1..20.
 MAX_INGREDIENT_SLOTS = 20
 
-# TheMealDB has one strCategory per meal. Some categories are a meal type, some a
-# diet; the rest (Beef, Seafood, Pasta, Miscellaneous, ...) map to neither.
-MEAL_TYPE_CATEGORIES = {"breakfast", "dessert", "starter", "side"}
+# TheMealDB has one strCategory per meal. Some categories give a meal type, some a
+# diet tag; the rest (Miscellaneous, unknown names) map to neither.
+MAIN_DISH_CATEGORIES = {"beef", "chicken", "seafood", "pork", "lamb", "goat", "pasta"}
+MEAL_TYPE_BY_CATEGORY = {
+    "breakfast": "breakfast",
+    "dessert": "dessert",
+    "starter": "starter",
+    "side": "side",
+    **{category: "main" for category in MAIN_DISH_CATEGORIES},
+}
 # Vegan food is also vegetarian, so a "vegetarian" filter must find vegan recipes.
 DIET_TAGS_BY_CATEGORY = {
     "vegetarian": ["vegetarian"],
@@ -47,7 +54,7 @@ def map_category(category):
     """Map a TheMealDB strCategory to a Freshup meal_type and diet_tags list."""
     key = _clean(category).lower()
     return {
-        "meal_type": key if key in MEAL_TYPE_CATEGORIES else None,
+        "meal_type": MEAL_TYPE_BY_CATEGORY.get(key),
         # list() returns a copy, so callers can't modify the shared constant.
         "diet_tags": list(DIET_TAGS_BY_CATEGORY.get(key, [])),
     }

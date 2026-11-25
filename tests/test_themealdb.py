@@ -76,7 +76,24 @@ def test_diet_tags_are_a_fresh_list_each_call():
     assert map_category("Vegan")["diet_tags"] == ["vegan", "vegetarian"]
 
 
-@pytest.mark.parametrize("category", ["Beef", "Seafood", "Miscellaneous", "Unknown", "", None])
+@pytest.mark.parametrize(
+    "category", ["Beef", "Chicken", "Seafood", "Pork", "Lamb", "Goat", "Pasta"]
+)
+def test_protein_and_pasta_categories_are_main(category):
+    assert map_category(category) == {"meal_type": "main", "diet_tags": []}
+
+
+@pytest.mark.parametrize("category", ["  BEEF ", "chicken", "\tPasta\n", " sEaFoOd"])
+def test_main_category_match_ignores_case_and_whitespace(category):
+    assert map_category(category)["meal_type"] == "main"
+
+
+@pytest.mark.parametrize("category", ["Vegetarian", "Vegan"])
+def test_diet_categories_have_no_meal_type(category):
+    assert map_category(category)["meal_type"] is None
+
+
+@pytest.mark.parametrize("category", ["Miscellaneous", "Unknown", "", None])
 def test_other_category_sets_neither(category):
     assert map_category(category) == {"meal_type": None, "diet_tags": []}
 
