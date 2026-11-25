@@ -3,7 +3,7 @@ import json
 import string
 from urllib.request import Request, urlopen
 
-from app.utils import normalize_ingredient
+from app.common.ingredients import normalize_ingredient
 
 # Official API, free test key "1" (educational use). One request per first letter.
 SEARCH_URL = "https://www.themealdb.com/api/json/v1/1/search.php?f={letter}"

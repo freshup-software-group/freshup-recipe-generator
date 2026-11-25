@@ -1,4 +1,4 @@
-"""Shared helpers used by the recipe loader, pantry and search modules."""
+"""Ingredient-name normalization shared by the recipe loader, pantry and search."""
 
 # Plurals the suffix rules below would get wrong.
 _IRREGULAR_PLURALS = {

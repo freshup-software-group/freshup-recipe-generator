@@ -1,6 +1,6 @@
 import pytest
 
-from app.utils import normalize_ingredient
+from app.common.ingredients import normalize_ingredient
 
 
 def test_lowercases_name():
