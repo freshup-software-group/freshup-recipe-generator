@@ -96,3 +96,23 @@ def test_search_result_is_read_only():
     result = match_recipe(["egg"], OMELETTE)
     with pytest.raises(AttributeError):
         result.score = 1.0
+
+
+def test_match_recipe_with_no_ingredients_scores_zero_without_crashing():
+    recipe = RecipeData(id=3, title="Water", ingredient_names=())
+    assert match_recipe(["egg"], recipe) == SearchResult(
+        id=3, title="Water", matched=(), missing=(), score=0.0,
+    )
+
+
+def test_match_recipe_counts_duplicate_recipe_ingredients_once():
+    recipe = RecipeData(id=4, title="Eggs", ingredient_names=("egg", "Eggs", "salt", "egg"))
+    result = match_recipe(["egg"], recipe)
+    assert result.matched == ("egg",)
+    assert result.missing == ("salt",)
+    assert result.score == 0.5
+
+
+def test_match_recipe_duplicate_missing_ingredient_listed_once():
+    recipe = RecipeData(id=5, title="Toast", ingredient_names=("butter", "bread", "Butter"))
+    assert match_recipe(["bread"], recipe).missing == ("butter",)

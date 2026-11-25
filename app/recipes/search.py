@@ -51,9 +51,12 @@ def match_recipe(user_ingredients, recipe):
     """Compare the user's ingredients with one recipe's ingredients.
 
     Both sides are normalized, so "Tomatoes" matches a recipe's "tomato".
+    A recipe ingredient listed twice counts once; a recipe with no ingredients
+    scores 0.0. Zero-score results are returned; rank_recipes() filters them.
     """
     have = {normalize_ingredient(name) for name in user_ingredients}
-    needed = [normalize_ingredient(name) for name in recipe.ingredient_names]
+    # Same de-duplication as parse_ingredient_input(): unique, first-seen order.
+    needed = list(dict.fromkeys(normalize_ingredient(name) for name in recipe.ingredient_names))
     matched = tuple(name for name in needed if name in have)
     missing = tuple(name for name in needed if name not in have)
     return SearchResult(
@@ -61,5 +64,5 @@ def match_recipe(user_ingredients, recipe):
         title=recipe.title,
         matched=matched,
         missing=missing,
-        score=len(matched) / len(needed),
+        score=len(matched) / len(needed) if needed else 0.0,
     )
