@@ -1,5 +1,15 @@
 """Turn TheMealDB API data (https://www.themealdb.com) into Freshup recipe data."""
+import json
+import string
+from urllib.request import Request, urlopen
+
 from app.utils import normalize_ingredient
+
+# Official API, free test key "1" (educational use). One request per first letter.
+SEARCH_URL = "https://www.themealdb.com/api/json/v1/1/search.php?f={letter}"
+REQUEST_TIMEOUT_SECONDS = 10
+# Generic client name; urllib's default "Python-urllib/x.y" is blocked by some servers.
+USER_AGENT = "recipe-loader/1.0"
 
 # TheMealDB stores ingredients in numbered slots strIngredient1..20 / strMeasure1..20.
 MAX_INGREDIENT_SLOTS = 20
@@ -58,3 +68,43 @@ def parse_meal(meal):
         "instructions": _clean(meal.get("strInstructions")),
         "ingredients": ingredients,
     }
+
+
+class TheMealDBError(Exception):
+    """TheMealDB could not be reached or sent a response we cannot use."""
+
+
+def _fetch_letter(letter):
+    """Return the list of raw meal dicts whose name starts with letter."""
+    url = SEARCH_URL.format(letter=letter)
+    request = Request(url, headers={"User-Agent": USER_AGENT})
+    try:
+        with urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
+            payload = json.load(response)
+    except OSError as error:
+        # OSError covers URLError, HTTPError, timeouts and dropped connections.
+        raise TheMealDBError(f"Could not reach TheMealDB ({url}): {error}") from error
+    except ValueError as error:
+        # ValueError covers invalid JSON and undecodable bytes.
+        raise TheMealDBError(f"TheMealDB sent invalid JSON ({url}): {error}") from error
+
+    if not isinstance(payload, dict) or "meals" not in payload:
+        raise TheMealDBError(f"TheMealDB sent an unexpected response ({url})")
+    meals = payload["meals"]
+    if meals is None:
+        return []  # {"meals": null} means no meal starts with this letter
+    if not isinstance(meals, list):
+        raise TheMealDBError(f"TheMealDB sent an unexpected response ({url})")
+    return meals
+
+
+def fetch_all_meals():
+    """Download every meal (letters a-z) and return them as one list.
+
+    All or nothing: if any request fails, TheMealDBError is raised and no meals
+    are returned, so the caller never saves a partial dataset.
+    """
+    meals = []
+    for letter in string.ascii_lowercase:
+        meals.extend(_fetch_letter(letter))
+    return meals
