@@ -17,3 +17,13 @@ def test_keeps_the_order_the_user_typed():
 
 def test_drops_blank_entries():
     assert parse_ingredient_input(",egg,, ,  ,onion,") == ["egg", "onion"]
+
+
+def test_removes_duplicates_after_normalization():
+    assert parse_ingredient_input("Tomatoes, tomato") == ["tomato"]
+
+
+def test_duplicates_keep_first_seen_order():
+    assert parse_ingredient_input("garlic, Eggs, GARLIC , egg, rice") == [
+        "garlic", "egg", "rice",
+    ]
