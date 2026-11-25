@@ -6,6 +6,7 @@ from app.recipes.search import (
     SearchResult,
     match_recipe,
     parse_ingredient_input,
+    rank_recipes,
 )
 
 
@@ -116,3 +117,48 @@ def test_match_recipe_counts_duplicate_recipe_ingredients_once():
 def test_match_recipe_duplicate_missing_ingredient_listed_once():
     recipe = RecipeData(id=5, title="Toast", ingredient_names=("butter", "bread", "Butter"))
     assert match_recipe(["bread"], recipe).missing == ("butter",)
+
+
+def recipe(recipe_id, title, *names):
+    return RecipeData(id=recipe_id, title=title, ingredient_names=names)
+
+
+def titles(results):
+    return [result.title for result in results]
+
+
+def test_rank_recipes_sorts_by_score_descending():
+    recipes = [
+        recipe(1, "Half", "egg", "flour"),          # 1/2
+        recipe(2, "Full", "egg"),                   # 1/1
+        recipe(3, "Quarter", "egg", "a", "b", "c"),  # 1/4
+    ]
+    assert titles(rank_recipes(["egg"], recipes)) == ["Full", "Half", "Quarter"]
+
+
+def test_rank_recipes_breaks_score_tie_by_matched_count():
+    recipes = [
+        recipe(1, "Small", "egg", "flour"),                  # 1/2
+        recipe(2, "Big", "egg", "milk", "flour", "sugar"),   # 2/4
+    ]
+    assert titles(rank_recipes(["egg", "milk"], recipes)) == ["Big", "Small"]
+
+
+def test_rank_recipes_breaks_full_tie_by_title_ignoring_case():
+    recipes = [recipe(1, "omelette", "egg"), recipe(2, "Boiled egg", "egg"),
+               recipe(3, "Coddled egg", "egg")]
+    assert titles(rank_recipes(["egg"], recipes)) == ["Boiled egg", "Coddled egg", "omelette"]
+
+
+def test_rank_recipes_excludes_recipes_with_zero_matches():
+    recipes = [recipe(1, "Rice", "rice"), recipe(2, "Toast", "bread", "butter"),
+               recipe(3, "Empty")]
+    results = rank_recipes(["butter"], recipes)
+    assert [result.id for result in results] == [2]
+
+
+def test_rank_recipes_returns_search_results():
+    [result] = rank_recipes(["Eggs"], [recipe(9, "Omelette", "egg", "milk")])
+    assert result == SearchResult(
+        id=9, title="Omelette", matched=("egg",), missing=("milk",), score=0.5,
+    )

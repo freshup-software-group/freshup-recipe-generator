@@ -66,3 +66,18 @@ def match_recipe(user_ingredients, recipe):
         missing=missing,
         score=len(matched) / len(needed) if needed else 0.0,
     )
+
+
+def rank_recipes(user_ingredients, recipes):
+    """Return SearchResults for recipes sharing at least one ingredient, best first.
+
+    Order: highest score, then most matched ingredients, then title A-Z
+    (ignoring case). Recipes with no matched ingredient are left out.
+    """
+    results = [match_recipe(user_ingredients, recipe) for recipe in recipes]
+    results = [result for result in results if result.matched]
+    # Negating score and count sorts those descending while title stays ascending.
+    return sorted(
+        results,
+        key=lambda result: (-result.score, -len(result.matched), result.title.casefold()),
+    )
