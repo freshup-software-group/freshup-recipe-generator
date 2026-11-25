@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from app.recipes.search import (
@@ -8,6 +11,9 @@ from app.recipes.search import (
     parse_ingredient_input,
     rank_recipes,
 )
+from app.themealdb import parse_meal
+
+SAMPLE_PATH = Path(__file__).parent / "data" / "themealdb_sample.json"
 
 
 def test_single_ingredient_is_normalized():
@@ -162,3 +168,36 @@ def test_rank_recipes_returns_search_results():
     assert result == SearchResult(
         id=9, title="Omelette", matched=("egg",), missing=("milk",), score=0.5,
     )
+
+
+def test_rank_recipes_with_no_matches_at_all_returns_empty_list():
+    recipes = [recipe(1, "Rice", "rice"), recipe(2, "Toast", "bread", "butter")]
+    assert rank_recipes(["chocolate"], recipes) == []
+
+
+@pytest.fixture
+def sample_recipes():
+    """The saved TheMealDB sample, run through the loader's parse_meal()."""
+    with SAMPLE_PATH.open(encoding="utf-8") as f:
+        meals = json.load(f)["meals"]
+    return [
+        RecipeData(
+            id=int(data["external_id"]),
+            title=data["title"],
+            ingredient_names=tuple(name for name, _quantity in data["ingredients"]),
+        )
+        for data in map(parse_meal, meals)
+    ]
+
+
+def test_rank_recipes_on_saved_sample(sample_recipes):
+    results = rank_recipes(parse_ingredient_input("Olive Oil, flour, Butter"), sample_recipes)
+    # Padron peppers 1/2, Pancakes (edited copy) 1/7, Bakewell tart 1/10.
+    assert [result.id for result in results] == [53150, 99990001, 52767]
+    assert results[0].matched == ("olive oil",)
+    assert results[0].missing == ("padron pepper",)
+    assert results[2].score == pytest.approx(0.1)
+
+
+def test_rank_recipes_on_saved_sample_with_no_matches(sample_recipes):
+    assert rank_recipes(parse_ingredient_input("chocolate, coffee"), sample_recipes) == []
