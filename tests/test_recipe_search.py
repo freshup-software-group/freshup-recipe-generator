@@ -1,4 +1,6 @@
-from app.recipes.search import parse_ingredient_input
+import pytest
+
+from app.recipes.search import EMPTY_INPUT_MESSAGE, parse_ingredient_input
 
 
 def test_single_ingredient_is_normalized():
@@ -27,3 +29,15 @@ def test_duplicates_keep_first_seen_order():
     assert parse_ingredient_input("garlic, Eggs, GARLIC , egg, rice") == [
         "garlic", "egg", "rice",
     ]
+
+
+@pytest.mark.parametrize("text", [None, "", "   ", ",", " , ,\t, "])
+def test_no_ingredient_raises_clear_error(text):
+    with pytest.raises(ValueError, match="Enter at least one ingredient"):
+        parse_ingredient_input(text)
+
+
+def test_error_message_is_exposed_for_the_route():
+    with pytest.raises(ValueError) as error:
+        parse_ingredient_input("")
+    assert str(error.value) == EMPTY_INPUT_MESSAGE
