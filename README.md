@@ -49,8 +49,9 @@ TheMealDB's terms, through the official API only (no scraping).
 From each meal we use:
 
 - **Title** and **instructions**
-- **Category**, mapped to a meal type (Breakfast, Dessert, Starter, Side) or a diet
-  tag (Vegetarian, Vegan; vegan recipes are also tagged vegetarian)
+- **Category**, mapped to a meal type (Breakfast, Dessert, Starter, Side; "main" for
+  Beef, Chicken, Seafood, Pork, Lamb, Goat and Pasta) or a diet tag (Vegetarian,
+  Vegan; vegan recipes are also tagged vegetarian)
 - Up to **20 ingredients** with their measures
 
 Ingredient names are normalized (lowercase, trimmed, singular) so they match pantry
