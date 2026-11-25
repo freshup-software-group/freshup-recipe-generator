@@ -1,4 +1,12 @@
-"""Recipe search by entered ingredients (UC-08). Pure functions, no database."""
+"""Recipe search by entered ingredients (UC-08). Pure functions, no database.
+
+Limitation: matching compares normalized names exactly, so a recipe's
+"chopped onion", "cherry tomato" or "garlic clove" does not match a pantry
+"onion", "tomato" or "garlic". Last-word matching was evaluated and rejected:
+it adds false positives ("coconut milk" for milk, "peanut butter" for butter)
+and still misses names like "garlic clove" or "chicken breast".
+See docs/known-limitations.md.
+"""
 from dataclasses import dataclass
 
 from app.common.ingredients import normalize_ingredient
