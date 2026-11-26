@@ -46,4 +46,8 @@ def create_app(config_name=None):
         db.create_all()
         print("Database tables created.")
 
+    # Show the shared 404 and 500 pages (F7)
+    from .errors import register_error_handlers
+    register_error_handlers(app)
+
     return app
