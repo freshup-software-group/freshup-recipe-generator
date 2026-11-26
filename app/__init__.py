@@ -46,8 +46,12 @@ def create_app(config_name=None):
         db.create_all()
         print("Database tables created.")
 
-    from .recipe_loader import load_recipes_command
+    # Show the shared 404 and 500 pages (F7)
+    from .errors import register_error_handlers
+    register_error_handlers(app)
 
+    # Register the flask load-recipes command (F6)
+    from .recipe_loader import load_recipes_command
     app.cli.add_command(load_recipes_command)
 
     return app
