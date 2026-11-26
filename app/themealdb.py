@@ -1,6 +1,7 @@
 """Turn TheMealDB API data (https://www.themealdb.com) into Freshup recipe data."""
 import json
 import string
+from typing import NamedTuple
 from urllib.request import Request, urlopen
 
 from app.common.ingredients import normalize_ingredient
@@ -36,18 +37,32 @@ def _clean(value):
     return (value or "").strip()
 
 
+def _optional(value):
+    """Return value trimmed, or None if it is null, empty or only whitespace."""
+    return _clean(value) or None
+
+
+class ParsedIngredient(NamedTuple):
+    """One recipe ingredient; field names match the RecipeIngredient columns."""
+
+    ingredient_name: str  # as written by TheMealDB, before any comma
+    normalized_name: str  # normalize_ingredient(ingredient_name), used for matching
+    quantity: str         # measure plus any comma note, "" if neither
+
+
 def _parse_ingredient(raw_name, raw_measure):
-    """Return (name, quantity) for one slot, or None if the slot is unused.
+    """Return a ParsedIngredient for one slot, or None if the slot is unused.
 
     A note after the first comma ("egg, beaten") is moved into the quantity
     text ("1, beaten") so the name matches the pantry but nothing is lost.
     """
     name_part, _, note = _clean(raw_name).partition(",")
-    name = normalize_ingredient(name_part)
-    if not name:
+    ingredient_name = name_part.strip()
+    normalized_name = normalize_ingredient(ingredient_name)
+    if not normalized_name:
         return None
     quantity_parts = [part for part in (_clean(raw_measure), note.strip()) if part]
-    return name, ", ".join(quantity_parts)
+    return ParsedIngredient(ingredient_name, normalized_name, ", ".join(quantity_parts))
 
 
 def map_category(category):
@@ -73,6 +88,10 @@ def parse_meal(meal):
         "external_id": _clean(meal.get("idMeal")),
         "title": _clean(meal.get("strMeal")),
         "instructions": _clean(meal.get("strInstructions")),
+        # Optional columns: stored as NULL rather than "" when TheMealDB has nothing.
+        "cuisine": _optional(meal.get("strArea")),
+        "image_url": _optional(meal.get("strMealThumb")),
+        "source_url": _optional(meal.get("strSource")),
         "ingredients": ingredients,
     }
 

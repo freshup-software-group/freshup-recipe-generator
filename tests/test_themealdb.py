@@ -31,19 +31,64 @@ def test_parses_recipe_fields(sample_meals):
     assert recipe["instructions"].startswith("step 1")
 
 
+def test_parses_cuisine_image_and_source(sample_meals):
+    recipe = parse_meal(sample_meals["53150"])
+    assert recipe["cuisine"] == "Spanish"
+    assert recipe["image_url"] == (
+        "https://www.themealdb.com/images/media/meals/0ljvc51763248075.jpg"
+    )
+    assert recipe["source_url"] == "https://www.bbcgoodfood.com/recipes/padron-peppers"
+
+
+def test_null_source_becomes_none(sample_meals):
+    # Bakewell tart has "strSource": null in the real API data.
+    assert parse_meal(sample_meals["52767"])["source_url"] is None
+
+
+@pytest.mark.parametrize("empty", ["", "   ", None])
+def test_empty_optional_fields_become_none(empty):
+    meal = make_meal([])
+    meal.update(strArea=empty, strMealThumb=empty, strSource=empty)
+    recipe = parse_meal(meal)
+    assert (recipe["cuisine"], recipe["image_url"], recipe["source_url"]) == (None, None, None)
+
+
+def test_missing_optional_keys_become_none():
+    recipe = parse_meal(make_meal([]))  # no strArea / strMealThumb / strSource keys
+    assert (recipe["cuisine"], recipe["image_url"], recipe["source_url"]) == (None, None, None)
+
+
+def test_optional_fields_are_trimmed():
+    meal = make_meal([])
+    meal["strArea"] = "  Italian "
+    assert parse_meal(meal)["cuisine"] == "Italian"
+
+
 def test_name_without_comma_is_normalized_and_measure_kept(sample_meals):
     ingredients = parse_meal(sample_meals["52767"])["ingredients"]
-    assert ("ground almond", "125g/4½oz") in ingredients  # ½ is "½"
+    assert ("ground almonds", "ground almond", "125g/4½oz") in ingredients  # ½ = "½"
 
 
 def test_name_with_comma_moves_note_into_quantity(sample_meals):
     ingredients = parse_meal(sample_meals["52767"])["ingredients"]
-    assert ("free-range egg", "1, beaten") in ingredients
+    assert ("free-range egg", "free-range egg", "1, beaten") in ingredients
 
 
 def test_comma_note_with_empty_measure_becomes_quantity():
     recipe = parse_meal(make_meal([("Garlic, crushed", " ")]))
-    assert recipe["ingredients"] == [("garlic", "crushed")]
+    assert recipe["ingredients"] == [("Garlic", "garlic", "crushed")]
+
+
+def test_ingredient_name_keeps_original_case_before_the_comma():
+    recipe = parse_meal(make_meal([("  Cherry Tomatoes , halved", "200g")]))
+    assert recipe["ingredients"] == [("Cherry Tomatoes", "cherry tomato", "200g, halved")]
+
+
+def test_ingredient_fields_match_model_column_names():
+    [ingredient] = parse_meal(make_meal([("Eggs", "2")]))["ingredients"]
+    assert ingredient.ingredient_name == "Eggs"
+    assert ingredient.normalized_name == "egg"
+    assert ingredient.quantity == "2"
 
 
 def test_unused_slots_are_skipped(sample_meals):
@@ -55,7 +100,7 @@ def test_unused_slots_are_skipped(sample_meals):
 
 def test_whitespace_only_and_null_names_are_skipped():
     meal = make_meal([("   ", "1 tsp"), (None, None), ("Salt", "Pinch")])
-    assert parse_meal(meal)["ingredients"] == [("salt", "Pinch")]
+    assert parse_meal(meal)["ingredients"] == [("Salt", "salt", "Pinch")]
 
 
 @pytest.mark.parametrize("category", ["Breakfast", "Dessert", "Starter", "Side"])
