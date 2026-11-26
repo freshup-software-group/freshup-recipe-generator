@@ -1,5 +1,5 @@
 """Routes for recipe search (UC-08)."""
-from flask import render_template, request
+from flask import flash, render_template, request
 
 from app.recipes import bp
 from app.recipes.service import search_recipes
@@ -14,7 +14,13 @@ def search():
     text = request.args.get("ingredients")
     if text is None:  # first visit: no search submitted yet
         return render_template("recipes/search.html", query="", results=None, total=0)
-    results = search_recipes(text)
+    try:
+        results = search_recipes(text)
+    except ValueError as error:
+        # UC-08 alternative flow: nothing usable entered. The message is
+        # EMPTY_INPUT_MESSAGE, written to be shown to the user as-is.
+        flash(str(error), "error")
+        return render_template("recipes/search.html", query=text, results=None, total=0)
     return render_template(
         "recipes/search.html",
         query=text,
