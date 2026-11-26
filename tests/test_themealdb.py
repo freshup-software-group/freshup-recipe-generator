@@ -31,6 +31,39 @@ def test_parses_recipe_fields(sample_meals):
     assert recipe["instructions"].startswith("step 1")
 
 
+def test_parses_cuisine_image_and_source(sample_meals):
+    recipe = parse_meal(sample_meals["53150"])
+    assert recipe["cuisine"] == "Spanish"
+    assert recipe["image_url"] == (
+        "https://www.themealdb.com/images/media/meals/0ljvc51763248075.jpg"
+    )
+    assert recipe["source_url"] == "https://www.bbcgoodfood.com/recipes/padron-peppers"
+
+
+def test_null_source_becomes_none(sample_meals):
+    # Bakewell tart has "strSource": null in the real API data.
+    assert parse_meal(sample_meals["52767"])["source_url"] is None
+
+
+@pytest.mark.parametrize("empty", ["", "   ", None])
+def test_empty_optional_fields_become_none(empty):
+    meal = make_meal([])
+    meal.update(strArea=empty, strMealThumb=empty, strSource=empty)
+    recipe = parse_meal(meal)
+    assert (recipe["cuisine"], recipe["image_url"], recipe["source_url"]) == (None, None, None)
+
+
+def test_missing_optional_keys_become_none():
+    recipe = parse_meal(make_meal([]))  # no strArea / strMealThumb / strSource keys
+    assert (recipe["cuisine"], recipe["image_url"], recipe["source_url"]) == (None, None, None)
+
+
+def test_optional_fields_are_trimmed():
+    meal = make_meal([])
+    meal["strArea"] = "  Italian "
+    assert parse_meal(meal)["cuisine"] == "Italian"
+
+
 def test_name_without_comma_is_normalized_and_measure_kept(sample_meals):
     ingredients = parse_meal(sample_meals["52767"])["ingredients"]
     assert ("ground almonds", "ground almond", "125g/4½oz") in ingredients  # ½ = "½"

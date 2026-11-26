@@ -37,6 +37,11 @@ def _clean(value):
     return (value or "").strip()
 
 
+def _optional(value):
+    """Return value trimmed, or None if it is null, empty or only whitespace."""
+    return _clean(value) or None
+
+
 class ParsedIngredient(NamedTuple):
     """One recipe ingredient; field names match the RecipeIngredient columns."""
 
@@ -83,6 +88,10 @@ def parse_meal(meal):
         "external_id": _clean(meal.get("idMeal")),
         "title": _clean(meal.get("strMeal")),
         "instructions": _clean(meal.get("strInstructions")),
+        # Optional columns: stored as NULL rather than "" when TheMealDB has nothing.
+        "cuisine": _optional(meal.get("strArea")),
+        "image_url": _optional(meal.get("strMealThumb")),
+        "source_url": _optional(meal.get("strSource")),
         "ingredients": ingredients,
     }
 
