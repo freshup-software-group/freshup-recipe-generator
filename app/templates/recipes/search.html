@@ -30,5 +30,8 @@
         </li>
       {% endfor %}
     </ol>
+  {% elif results is not none %}
+    {# A search ran but found nothing (FR-3.5); results is None before any search. #}
+    <p class="no-results">No recipes match those ingredients. Try adding more or different ingredients.</p>
   {% endif %}
 {% endblock %}

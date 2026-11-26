@@ -105,3 +105,30 @@ def test_empty_input_message_is_not_repeated_on_next_page(client, saved_recipes)
     client.get("/recipes/?ingredients=")
     page = client.get("/recipes/").get_data(as_text=True)
     assert EMPTY_INPUT_MESSAGE not in page
+
+
+NO_MATCHES = "No recipes match those ingredients. Try adding more or different ingredients."
+
+
+def test_no_matches_shows_clear_message_in_results_area(client, saved_recipes):
+    response = client.get("/recipes/?ingredients=chocolate, coffee")
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert f'<p class="no-results">{NO_MATCHES}</p>' in page
+    assert 'class="flash' not in page  # plain text, not a flash message
+    assert "matching recipes" not in page
+    assert 'value="chocolate, coffee"' in page  # form keeps the query to edit
+
+
+def test_no_matches_message_not_shown_before_searching(client, saved_recipes):
+    assert NO_MATCHES not in client.get("/recipes/").get_data(as_text=True)
+
+
+def test_no_matches_message_not_shown_for_empty_input(client, saved_recipes):
+    page = client.get("/recipes/?ingredients=").get_data(as_text=True)
+    assert EMPTY_INPUT_MESSAGE in page
+    assert NO_MATCHES not in page
+
+
+def test_no_matches_message_not_shown_when_there_are_results(client, saved_recipes):
+    assert NO_MATCHES not in client.get("/recipes/?ingredients=egg").get_data(as_text=True)
