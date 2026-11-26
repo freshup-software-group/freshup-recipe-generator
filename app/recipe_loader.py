@@ -1,7 +1,11 @@
 """Save TheMealDB meals into the Recipe and RecipeIngredient tables (F6, #14)."""
+import click
+from flask.cli import with_appcontext
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.extensions import db
 from app.models import Recipe, RecipeIngredient
-from app.themealdb import map_category, parse_meal
+from app.themealdb import TheMealDBError, fetch_all_meals, map_category, parse_meal
 
 
 def _skip_label(data):
@@ -70,3 +74,39 @@ def save_meals(meals):
         db.session.rollback()
         raise
     return summary
+
+
+def format_summary(summary):
+    """Return the lines the CLI prints after a load."""
+    lines = [
+        f"Created:   {summary['created']}",
+        # "refreshed" = already stored and overwritten with the latest API data,
+        # whether or not anything in it actually changed.
+        f"Refreshed: {summary['updated']}",
+        f"Skipped:   {len(summary['skipped'])}",
+    ]
+    if summary["skipped"]:
+        lines.append("Skipped (missing id, title or instructions): "
+                     + ", ".join(summary["skipped"]))
+    return lines
+
+
+@click.command("load-recipes")
+@with_appcontext
+def load_recipes_command():
+    """Import recipes from TheMealDB (adds and refreshes, never deletes)."""
+    click.echo("Fetching recipes from TheMealDB...")
+    try:
+        meals = fetch_all_meals()
+    except TheMealDBError as error:
+        # ClickException prints "Error: <message>" and exits with code 1.
+        raise click.ClickException(f"{error}\nNo changes were made to the database.")
+    click.echo(f"Fetched {len(meals)} meals. Saving...")
+    try:
+        summary = save_meals(meals)
+    except SQLAlchemyError as error:
+        raise click.ClickException(
+            f"Database error: {error}\nNo changes were made to the database."
+        )
+    for line in format_summary(summary):
+        click.echo(line)
