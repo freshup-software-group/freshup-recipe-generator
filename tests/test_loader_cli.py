@@ -83,3 +83,11 @@ def test_database_error_gives_clear_error_and_changes_nothing(app, sample_meals)
     assert "Error: Database error" in result.output
     assert "No changes were made to the database." in result.output
     assert Recipe.query.count() == 0
+
+
+def test_command_is_registered_as_flask_load_recipes(app, sample_meals):
+    assert "load-recipes" in app.cli.commands
+    with mock.patch("app.recipe_loader.fetch_all_meals", return_value=sample_meals):
+        result = app.test_cli_runner().invoke(args=["load-recipes"])  # by name, like the shell
+    assert result.exit_code == 0, result.output
+    assert "Created:   2" in result.output
