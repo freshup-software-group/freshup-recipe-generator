@@ -6,23 +6,13 @@ from unittest import mock
 import pytest
 from sqlalchemy.exc import OperationalError
 
-from app import create_app
 from app.extensions import db
 from app.models import Recipe, RecipeIngredient, ShoppingList, User
 from app.recipe_loader import save_meals
 
 SAMPLE_PATH = Path(__file__).parent / "data" / "themealdb_sample.json"
 
-
-@pytest.fixture
-def app():
-    """A fresh app with an empty in-memory database for each test."""
-    app = create_app("testing")
-    with app.app_context():
-        db.create_all()
-        yield app
-        db.session.remove()
-        db.drop_all()
+# The app fixture (fresh in-memory database per test) comes from conftest.py.
 
 
 @pytest.fixture
