@@ -70,12 +70,20 @@ class Recipe(db.Model):
     __tablename__ = "recipes"
 
     id = db.Column(db.Integer, primary_key=True)
+    external_id = db.Column(
+        db.String(50),
+        unique=True,
+        nullable=True,
+    )
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
     instructions = db.Column(db.Text, nullable=True)
     prep_time_minutes = db.Column(db.Integer, nullable=True)
     cook_time_minutes = db.Column(db.Integer, nullable=True)
     servings = db.Column(db.Integer, nullable=True)
+    meal_type = db.Column(db.String(100), nullable=True)
+    diet_tags = db.Column(db.Text, nullable=False, default="")
+    cuisine = db.Column(db.String(100), nullable=True)
     source_url = db.Column(db.String(500), nullable=True)
     image_url = db.Column(db.String(500), nullable=True)
 
@@ -85,10 +93,15 @@ class Recipe(db.Model):
         cascade="all, delete-orphan",
     )
 
+    shopping_lists = db.relationship(
+        "ShoppingList",
+        back_populates="recipe",
+    )
+
     @property
     def ingredient_names(self):
-        """Return ingredient names for recipe search."""
-        return [item.ingredient_name for item in self.ingredients]
+        """Return normalized ingredient names for recipe search."""
+        return [item.normalized_name for item in self.ingredients]
 
     def __repr__(self):
         return f"<Recipe {self.title}>"
@@ -127,6 +140,12 @@ class ShoppingList(db.Model):
         db.ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
+    recipe_id = db.Column(
+        db.Integer,
+        db.ForeignKey("recipes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    recipe_title = db.Column(db.String(255), nullable=True)
     name = db.Column(
         db.String(150),
         nullable=False,
@@ -140,6 +159,11 @@ class ShoppingList(db.Model):
     )
 
     user = db.relationship("User", back_populates="shopping_lists")
+
+    recipe = db.relationship(
+        "Recipe",
+        back_populates="shopping_lists",
+    )
 
     items = db.relationship(
         "ShoppingListItem",
