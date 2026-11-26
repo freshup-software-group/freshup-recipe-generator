@@ -50,4 +50,8 @@ def create_app(config_name=None):
     from .errors import register_error_handlers
     register_error_handlers(app)
 
+    # Register the flask load-recipes command (F6)
+    from .recipe_loader import load_recipes_command
+    app.cli.add_command(load_recipes_command)
+
     return app
