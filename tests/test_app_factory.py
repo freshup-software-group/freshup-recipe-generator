@@ -16,4 +16,3 @@ def test_all_blueprints_registered():
 def test_home_page_responds():
     app = create_app("testing")
     assert app.test_client().get("/").status_code == 200
-  
