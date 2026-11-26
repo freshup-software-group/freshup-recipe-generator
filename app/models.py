@@ -120,7 +120,7 @@ class RecipeIngredient(db.Model):
     )
     ingredient_name = db.Column(db.String(150), nullable=False)
     normalized_name = db.Column(db.String(150), nullable=False)
-    quantity = db.Column(db.String(50), nullable=True)
+    quantity = db.Column(db.String(255), nullable=True)
     unit = db.Column(db.String(50), nullable=True)
 
     recipe = db.relationship("Recipe", back_populates="ingredients")
