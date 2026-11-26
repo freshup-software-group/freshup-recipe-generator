@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Freshup Recipe Generator{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="nav-brand" href="/">Freshup</a>
+      <ul class="nav-links">
+        <li><a href="/recipes/">Search recipes</a></li>
+        {% if current_user and current_user.is_authenticated %}
+          <li><a href="/pantry/">My pantry</a></li>
+          <li><a href="/shopping/">Shopping lists</a></li>
+          <li><a href="/auth/logout">Log out</a></li>
+        {% else %}
+          <li><a href="/auth/login">Log in</a></li>
+          <li><a href="/auth/register">Register</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" role="alert">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>Freshup Software Group · Fresh ideas. Thoughtful software.</p>
+  </footer>
+</body>
+</html>
