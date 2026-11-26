@@ -34,11 +34,24 @@ docker compose up --build
 
 The application is then available at <http://localhost:5000>.
 
-To load the recipe dataset into the database:
+To load the recipe dataset into the database, create the tables and then run the
+loader:
 
 ```bash
-docker compose exec web python -m app.seed
+docker compose exec web flask init-db
+docker compose exec web flask load-recipes
 ```
+
+Without Docker, from the project folder:
+
+```bash
+flask --app wsgi.py init-db
+flask --app wsgi.py load-recipes
+```
+
+The loader needs internet access to TheMealDB and imports about 790 recipes; it
+prints how many were created, refreshed and skipped. Re-running it is safe: it
+creates new recipes, refreshes existing ones, and never deletes any.
 
 ## Data source
 
