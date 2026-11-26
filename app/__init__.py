@@ -46,4 +46,8 @@ def create_app(config_name=None):
         db.create_all()
         print("Database tables created.")
 
+    from .recipe_loader import load_recipes_command
+
+    app.cli.add_command(load_recipes_command)
+
     return app
