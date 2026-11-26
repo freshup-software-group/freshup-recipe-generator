@@ -17,7 +17,17 @@
     <p class="result-count">Showing {{ results|length }} of {{ total }} matching recipes</p>
     <ol class="results">
       {% for result in results %}
-        <li class="card"><h2>{{ result.title }}</h2></li>
+        {% set total_ingredients = result.matched|length + result.missing|length %}
+        <li class="card">
+          <h2>{{ result.title }}</h2>
+          <p class="score">You have {{ result.matched|length }} of {{ total_ingredients }} ingredients</p>
+          <p class="matched"><strong>You have:</strong> {{ result.matched|join(", ") }}</p>
+          {% if result.missing %}
+            <p class="missing"><strong>Missing:</strong> {{ result.missing|join(", ") }}</p>
+          {% else %}
+            <p class="missing">Nothing missing - you can cook this now.</p>
+          {% endif %}
+        </li>
       {% endfor %}
     </ol>
   {% endif %}

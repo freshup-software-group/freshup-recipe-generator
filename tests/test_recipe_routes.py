@@ -62,3 +62,29 @@ def test_shows_at_most_max_results_but_counts_all(client, app):
 def test_query_text_is_escaped(client, saved_recipes):
     page = client.get("/recipes/?ingredients=<script>egg").get_data(as_text=True)
     assert "<script>" not in page
+
+
+def result_cards(page):
+    """Split the rendered page into one HTML chunk per result, in order."""
+    return page.split('<li class="card">')[1:]
+
+
+def test_each_result_shows_score_as_x_of_y(client, saved_recipes):
+    page = client.get("/recipes/?ingredients=egg, milk").get_data(as_text=True)
+    boiled_egg, omelette = result_cards(page)
+    assert "You have 1 of 1 ingredients" in boiled_egg
+    assert "You have 2 of 3 ingredients" in omelette
+
+
+def test_each_result_lists_matched_and_missing_ingredients(client, saved_recipes):
+    page = client.get("/recipes/?ingredients=Eggs, Milk").get_data(as_text=True)
+    [omelette] = [card for card in result_cards(page) if "Omelette" in card]
+    assert "<strong>You have:</strong> egg, milk" in omelette
+    assert "<strong>Missing:</strong> butter" in omelette
+
+
+def test_full_match_says_nothing_missing(client, saved_recipes):
+    page = client.get("/recipes/?ingredients=egg").get_data(as_text=True)
+    [boiled_egg] = [card for card in result_cards(page) if "Boiled egg" in card]
+    assert "Nothing missing" in boiled_egg
+    assert "Missing:" not in boiled_egg
