@@ -8,7 +8,7 @@ from sqlalchemy.exc import OperationalError
 
 from app import create_app
 from app.extensions import db
-from app.models import Recipe, RecipeIngredient
+from app.models import Recipe, RecipeIngredient, ShoppingList, User
 from app.recipe_loader import save_meals
 
 SAMPLE_PATH = Path(__file__).parent / "data" / "themealdb_sample.json"
@@ -95,3 +95,56 @@ def test_database_error_saves_nothing(app, sample_meals):
             save_meals(sample_meals)
     assert Recipe.query.count() == 0
     assert RecipeIngredient.query.count() == 0
+
+
+def test_second_run_updates_instead_of_duplicating(app, sample_meals):
+    save_meals(sample_meals)
+    ids_before = {r.external_id: r.id for r in Recipe.query.all()}
+
+    summary = save_meals(sample_meals)
+
+    assert summary == {"created": 0, "updated": 2, "skipped": ["99990001"]}
+    assert Recipe.query.count() == 2
+    assert RecipeIngredient.query.count() == 12  # 10 + 2, not doubled
+    # Same primary keys: the rows were updated, not replaced.
+    assert {r.external_id: r.id for r in Recipe.query.all()} == ids_before
+
+
+def test_update_applies_changed_data(app, sample_meals):
+    save_meals(sample_meals)
+    changed = dict(sample_meals[1], strMeal="Padron peppers (new)",
+                   strIngredient2="Green Peppers", strMeasure2="400g")
+
+    save_meals([changed])
+
+    peppers = recipe_by_external_id("53150")
+    assert peppers.title == "Padron peppers (new)"
+    assert [(i.normalized_name, i.quantity) for i in peppers.ingredients] == [
+        ("olive oil", "1 tablespoon"), ("green pepper", "400g"),
+    ]
+    assert RecipeIngredient.query.filter_by(normalized_name="padron pepper").count() == 0
+
+
+def test_recipes_missing_from_a_later_run_are_kept(app, sample_meals):
+    save_meals(sample_meals)
+    save_meals(sample_meals[:1])  # only Bakewell tart this time
+    assert sorted(r.external_id for r in Recipe.query.all()) == ["52767", "53150"]
+
+
+def test_saved_shopping_list_still_points_at_updated_recipe(app, sample_meals):
+    save_meals(sample_meals)
+    peppers = recipe_by_external_id("53150")
+    user = User(email="cook@example.com", password_hash="x")
+    db.session.add(ShoppingList(user=user, recipe=peppers, recipe_title=peppers.title))
+    db.session.commit()
+
+    save_meals(sample_meals)
+
+    shopping_list = ShoppingList.query.one()
+    assert shopping_list.recipe is recipe_by_external_id("53150")
+
+
+def test_repeated_id_in_one_batch_is_saved_once(app, sample_meals):
+    summary = save_meals([sample_meals[1], sample_meals[1]])
+    assert (summary["created"], summary["updated"]) == (1, 1)
+    assert Recipe.query.count() == 1
