@@ -184,7 +184,7 @@ def sample_recipes():
         RecipeData(
             id=int(data["external_id"]),
             title=data["title"],
-            ingredient_names=tuple(name for name, _quantity in data["ingredients"]),
+            ingredient_names=tuple(ing.normalized_name for ing in data["ingredients"]),
         )
         for data in map(parse_meal, meals)
     ]
