@@ -1,6 +1,8 @@
 # Recipe lookups shared by the details page, search and shopping lists
 from dataclasses import dataclass, field
 
+from app.common.ingredients import normalize_ingredient
+
 
 # A recipe as the rest of the app sees it
 @dataclass
@@ -53,16 +55,11 @@ def get_recipe(recipe_id):
     return to_details(recipe)
 
 
-# Default way to compare names: ignore case and extra spaces
-# Swap in normalize_ingredient() once Roberto's F6 is merged
-def _simple_normalize(name):
-    return " ".join(name.lower().split())
-
-
 # Split a recipe's ingredients into the ones the user has and the ones
 # they are missing (FR-4.3, FR-4.4)
+# Names are compared with the shared normalize_ingredient() (FR-3.4)
 def split_have_missing(recipe_ingredients, pantry_ingredients,
-                       normalize=_simple_normalize):
+                       normalize=normalize_ingredient):
     pantry = {normalize(name) for name in pantry_ingredients}
     have = []
     missing = []

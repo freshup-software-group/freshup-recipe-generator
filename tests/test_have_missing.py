@@ -42,3 +42,10 @@ def test_custom_normalize_is_used():
         ["scallion"], ["green onion"], normalize=same_onion)
     assert have == ["scallion"]
     assert missing == []
+
+
+# Singular and plural count as the same ingredient (FR-3.4)
+def test_singular_and_plural_match():
+    have, missing = split_have_missing(["eggs", "garlic"], ["egg"])
+    assert have == ["eggs"]
+    assert missing == ["garlic"]
