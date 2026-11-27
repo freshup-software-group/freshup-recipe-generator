@@ -45,6 +45,21 @@ STATUS_EMPTY_PANTRY = "empty_pantry"  # the user has no pantry items yet
 STATUS_NO_MATCHES = "no_matches"      # pantry has items, but no recipe uses them
 PANTRY_STATUSES = (STATUS_OK, STATUS_EMPTY_PANTRY, STATUS_NO_MATCHES)
 
+# UC-07 alternative flows; the route can show these texts to the user as-is.
+EMPTY_PANTRY_MESSAGE = (
+    "Your pantry is empty. Add ingredients to your pantry to find recipes you can make."
+)
+NO_MATCHES_MESSAGE = (
+    "No recipes match the ingredients in your pantry. "
+    "Try adding more ingredients to your pantry."
+)
+# Every status has an entry; ok has no message because the results speak for themselves.
+PANTRY_MESSAGES = {
+    STATUS_OK: None,
+    STATUS_EMPTY_PANTRY: EMPTY_PANTRY_MESSAGE,
+    STATUS_NO_MATCHES: NO_MATCHES_MESSAGE,
+}
+
 
 @dataclass(frozen=True)
 class PantrySearchResult:
@@ -58,6 +73,17 @@ class PantrySearchResult:
             raise ValueError(f"Unknown pantry search status: {self.status!r}")
         # Accept any iterable but store a tuple, so the result stays read-only.
         object.__setattr__(self, "results", tuple(self.results))
+
+
+def pantry_message(status):
+    """Return the guidance text for a pantry search status, or None for ok.
+
+    Raises ValueError for an unknown status, like PantrySearchResult does.
+    """
+    try:
+        return PANTRY_MESSAGES[status]
+    except (KeyError, TypeError):  # TypeError: an unhashable status, e.g. a list
+        raise ValueError(f"Unknown pantry search status: {status!r}") from None
 
 
 def parse_ingredient_input(text):

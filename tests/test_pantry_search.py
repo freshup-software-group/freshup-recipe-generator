@@ -2,6 +2,9 @@
 import pytest
 
 from app.recipes.search import (
+    EMPTY_PANTRY_MESSAGE,
+    NO_MATCHES_MESSAGE,
+    PANTRY_MESSAGES,
     PANTRY_STATUSES,
     STATUS_EMPTY_PANTRY,
     STATUS_NO_MATCHES,
@@ -9,6 +12,7 @@ from app.recipes.search import (
     PantrySearchResult,
     RecipeData,
     SearchResult,
+    pantry_message,
     rank_recipes,
     search_with_pantry,
 )
@@ -108,3 +112,44 @@ def test_repeated_and_blank_names_are_ignored():
 def test_accepts_any_iterable_of_names():
     names = (item for item in ["rice"])  # e.g. a generator over pantry items
     assert [r.title for r in search_with_pantry(names, RECIPES).results] == ["Plain rice"]
+
+
+# ---------- pantry_message ----------
+
+def test_every_status_has_a_message_entry():
+    assert set(PANTRY_MESSAGES) == set(PANTRY_STATUSES)
+
+
+@pytest.mark.parametrize("status", PANTRY_STATUSES)
+def test_message_for_every_status_is_text_or_none(status):
+    message = pantry_message(status)
+    assert message is None or (isinstance(message, str) and message.strip())
+
+
+def test_ok_has_no_message():
+    assert pantry_message(STATUS_OK) is None
+
+
+def test_empty_pantry_tells_user_to_add_ingredients_to_their_pantry():
+    assert pantry_message(STATUS_EMPTY_PANTRY) == EMPTY_PANTRY_MESSAGE
+    assert "Add ingredients to your pantry" in EMPTY_PANTRY_MESSAGE
+
+
+def test_no_matches_suggests_adding_more_ingredients():
+    assert pantry_message(STATUS_NO_MATCHES) == NO_MATCHES_MESSAGE
+    assert "adding more ingredients" in NO_MATCHES_MESSAGE
+
+
+def test_problem_messages_are_different():
+    assert EMPTY_PANTRY_MESSAGE != NO_MATCHES_MESSAGE
+
+
+def test_message_matches_a_search_result_status():
+    result = search_with_pantry([], [])
+    assert pantry_message(result.status) == EMPTY_PANTRY_MESSAGE
+
+
+@pytest.mark.parametrize("status", ["", "OK", "error", None, ["ok"]])
+def test_unknown_status_has_no_message(status):
+    with pytest.raises(ValueError, match="Unknown pantry search status"):
+        pantry_message(status)
