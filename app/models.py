@@ -187,7 +187,8 @@ class ShoppingListItem(db.Model):
         nullable=False,
     )
     ingredient_name = db.Column(db.String(150), nullable=False)
-    quantity = db.Column(db.String(50), nullable=True)
+    # Matches RecipeIngredient.quantity; TheMealDB quantities exceed 50 chars.
+    quantity = db.Column(db.String(255), nullable=True)
     unit = db.Column(db.String(50), nullable=True)
     is_checked = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
