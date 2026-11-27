@@ -1,0 +1,32 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Your Pantry</h1>
+
+<h2>Add an ingredient</h2>
+
+<form method="POST" action="{{ url_for('pantry.index') }}">
+    <label for="ingredient_name">Ingredient name</label>
+    <input
+        type="text"
+        id="ingredient_name"
+        name="ingredient_name"
+        placeholder="e.g. potatoes"
+        required
+    >
+    <button type="submit">Add Ingredient</button>
+</form>
+
+<h2>Your ingredients</h2>
+
+{% if items %}
+    <ul>
+        {% for item in items %}
+            <li>{{ item.ingredient_name }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Your pantry is empty. Add your first ingredient above.</p>
+{% endif %}
+{% endblock %}
