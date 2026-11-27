@@ -31,3 +31,12 @@ def test_recipe_page_shows_title(client):
     response = client.get(f"/recipes/{recipe.id}")
     assert response.status_code == 200
     assert b"Garlic pasta" in response.data
+
+
+# The page lists the ingredients and shows the instructions
+def test_recipe_page_shows_ingredients_and_instructions(client):
+    recipe = add_recipe()
+    response = client.get(f"/recipes/{recipe.id}")
+    assert b"<li>pasta</li>" in response.data
+    assert b"<li>garlic</li>" in response.data
+    assert b"Boil the pasta." in response.data

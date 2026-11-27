@@ -5,5 +5,27 @@
 {% block content %}
   <section class="card">
     <h1>{{ recipe.title }}</h1>
+    {% if recipe.image_url %}
+      <img class="recipe-image" src="{{ recipe.image_url }}" alt="{{ recipe.title }}">
+    {% endif %}
+    <ul class="recipe-meta">
+      {% if recipe.meal_type %}<li>Meal type: {{ recipe.meal_type|capitalize }}</li>{% endif %}
+      {% if recipe.cuisine %}<li>Cuisine: {{ recipe.cuisine }}</li>{% endif %}
+      {% if recipe.diet_tags %}<li>Diet: {{ recipe.diet_tags|join(", ") }}</li>{% endif %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Ingredients</h2>
+    <ul>
+      {% for name in recipe.ingredient_names %}
+        <li>{{ name }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Instructions</h2>
+    <p class="instructions">{{ recipe.instructions or "No instructions available." }}</p>
   </section>
 {% endblock %}
