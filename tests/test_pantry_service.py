@@ -1,3 +1,4 @@
+
 import pytest
 
 from app.extensions import db
@@ -68,3 +69,34 @@ def test_get_pantry_items_returns_user_items_only(app, user):
         items = service.get_pantry_items(user)
 
         assert [item.ingredient_name for item in items] == ["Tomatoes"]
+
+
+def test_remove_ingredient_removes_item(app, user):
+    with app.app_context():
+        item = service.add_ingredient(user, "Tomatoes")
+
+        result = service.remove_ingredient(item.id, user)
+
+        assert result is True
+        assert service.get_pantry_items(user) == []
+
+
+def test_user_cannot_remove_another_users_ingredient(app, user):
+    with app.app_context():
+        other = User(email="other@example.com", password_hash="x")
+        db.session.add(other)
+        db.session.commit()
+
+        item = service.add_ingredient(other.id, "Pasta")
+
+        result = service.remove_ingredient(item.id, user)
+
+        assert result is False
+        assert len(service.get_pantry_items(other.id)) == 1
+
+
+def test_remove_nonexistent_ingredient_returns_false(app, user):
+    with app.app_context():
+        result = service.remove_ingredient(9999, user)
+
+        assert result is False
