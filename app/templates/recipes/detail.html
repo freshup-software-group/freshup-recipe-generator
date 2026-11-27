@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe.title }} - Freshup{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h1>{{ recipe.title }}</h1>
+    {% if recipe.image_url %}
+      <img class="recipe-image" src="{{ recipe.image_url }}" alt="{{ recipe.title }}">
+    {% endif %}
+    <ul class="recipe-meta">
+      {% if recipe.meal_type %}<li>Meal type: {{ recipe.meal_type|capitalize }}</li>{% endif %}
+      {% if recipe.cuisine %}<li>Cuisine: {{ recipe.cuisine }}</li>{% endif %}
+      {% if recipe.diet_tags %}<li>Diet: {{ recipe.diet_tags|join(", ") }}</li>{% endif %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Ingredients</h2>
+    {% if not current_user.is_authenticated %}
+      <p class="guest-note">Log in to see which ingredients you already have.</p>
+    {% endif %}
+    <ul>
+      {% for name in recipe.ingredient_names %}
+        <li>{{ name }}</li>
+      {% endfor %}
+    </ul>
+    {% if current_user.is_authenticated %}
+      <p class="matched"><strong>You have:</strong> {{ have|join(", ") if have else "none of these yet" }}</p>
+      <p class="missing"><strong>Missing:</strong> {{ missing|join(", ") if missing else "nothing, you can cook this now" }}</p>
+      <a class="button" href="{{ url_for('shopping.generate', recipe_id=recipe.id) }}">Make shopping list</a>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>Instructions</h2>
+    <p class="instructions">{{ recipe.instructions or "No instructions available." }}</p>
+  </section>
+{% endblock %}
