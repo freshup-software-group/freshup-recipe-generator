@@ -66,6 +66,7 @@ def get_pantry_items(user_id, repository=None):
     """Return the user's pantry item records."""
     return _repo(repository).list_for_user(user_id)
 
+
 def remove_ingredient(item_id, user_id, repository=None):
     """Remove an ingredient from the user's pantry."""
     if user_id is None:
