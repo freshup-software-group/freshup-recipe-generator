@@ -69,3 +69,10 @@ def test_guest_has_no_shopping_list_button(client):
     recipe = add_recipe()
     response = client.get(f"/recipes/{recipe.id}")
     assert b"Make shopping list" not in response.data
+
+
+# Each search result links to its details page (UC-08 to UC-09)
+def test_search_result_links_to_details_page(client):
+    recipe = add_recipe()
+    response = client.get("/recipes/?ingredients=pasta")
+    assert f'href="/recipes/{recipe.id}"'.encode() in response.data
