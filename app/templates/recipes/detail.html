@@ -17,6 +17,9 @@
 
   <section class="card">
     <h2>Ingredients</h2>
+    {% if not current_user.is_authenticated %}
+      <p class="guest-note">Log in to see which ingredients you already have.</p>
+    {% endif %}
     <ul>
       {% for name in recipe.ingredient_names %}
         <li>{{ name }}</li>

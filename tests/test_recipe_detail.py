@@ -40,3 +40,17 @@ def test_recipe_page_shows_ingredients_and_instructions(client):
     assert b"<li>pasta</li>" in response.data
     assert b"<li>garlic</li>" in response.data
     assert b"Boil the pasta." in response.data
+
+
+# A guest is told to log in to compare with their pantry
+def test_guest_sees_log_in_note(client):
+    recipe = add_recipe()
+    response = client.get(f"/recipes/{recipe.id}")
+    assert b"Log in to see which ingredients you already have" in response.data
+
+
+# A logged-in user does not see the guest note
+def test_logged_in_user_has_no_guest_note(logged_in_client):
+    recipe = add_recipe()
+    response = logged_in_client.get(f"/recipes/{recipe.id}")
+    assert b"Log in to see which ingredients you already have" not in response.data
