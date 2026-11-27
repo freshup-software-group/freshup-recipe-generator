@@ -39,6 +39,27 @@ class SearchResult:
     score: float    # len(matched) / number of recipe ingredients, 0.0 to 1.0
 
 
+# UC-07 outcomes of a pantry search; the route picks its message from these.
+STATUS_OK = "ok"                      # at least one recipe matched
+STATUS_EMPTY_PANTRY = "empty_pantry"  # the user has no pantry items yet
+STATUS_NO_MATCHES = "no_matches"      # pantry has items, but no recipe uses them
+PANTRY_STATUSES = (STATUS_OK, STATUS_EMPTY_PANTRY, STATUS_NO_MATCHES)
+
+
+@dataclass(frozen=True)
+class PantrySearchResult:
+    """Outcome of a pantry search: a status plus the ranked SearchResults."""
+
+    status: str
+    results: tuple = ()  # SearchResults, best first; empty unless status is ok
+
+    def __post_init__(self):
+        if self.status not in PANTRY_STATUSES:
+            raise ValueError(f"Unknown pantry search status: {self.status!r}")
+        # Accept any iterable but store a tuple, so the result stays read-only.
+        object.__setattr__(self, "results", tuple(self.results))
+
+
 def parse_ingredient_input(text):
     """Turn the user's comma-separated input into a list of unique normalized names.
 
