@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Search recipes - Freshup{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h1>Search recipes</h1>
+    <form method="get" action="{{ url_for('recipes.search') }}">
+      <label for="ingredients">Ingredients you have (separated by commas)</label>
+      <input type="text" id="ingredients" name="ingredients" value="{{ query }}"
+             placeholder="e.g. eggs, milk, butter">
+      <button class="button" type="submit">Search</button>
+    </form>
+  </div>
+
+  {% if results %}
+    <p class="result-count">Showing {{ results|length }} of {{ total }} matching recipes</p>
+    <ol class="results">
+      {% for result in results %}
+        {% set total_ingredients = result.matched|length + result.missing|length %}
+        <li class="card">
+          <h2>{{ result.title }}</h2>
+          <p class="score">You have {{ result.matched|length }} of {{ total_ingredients }} ingredients</p>
+          <p class="matched"><strong>You have:</strong> {{ result.matched|join(", ") }}</p>
+          {% if result.missing %}
+            <p class="missing"><strong>Missing:</strong> {{ result.missing|join(", ") }}</p>
+          {% else %}
+            <p class="missing">Nothing missing - you can cook this now.</p>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  {% elif results is not none %}
+    {# A search ran but found nothing (FR-3.5); results is None before any search. #}
+    <p class="no-results">No recipes match those ingredients. Try adding more or different ingredients.</p>
+  {% endif %}
+{% endblock %}

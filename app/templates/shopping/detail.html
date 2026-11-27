@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ shopping_list.recipe_title or shopping_list.name }}</h1>
+
+{% if shopping_list.items %}
+  <ul>
+    {% for item in shopping_list.items %}
+      <li>
+        <span{% if item.is_checked %} class="checked"{% endif %}>
+          {{ item.ingredient_name }}
+          {%- if item.quantity %} — {{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %}{% endif %}
+        </span>
+        <form method="post"
+              action="{{ url_for('shopping.delete_item', list_id=shopping_list.id, item_id=item.id) }}">
+          <button type="submit">Remove</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>Every item on this list has been removed.</p>
+{% endif %}
+
+<p><a href="{{ url_for('shopping.index') }}">Back to saved lists</a></p>
+{% endblock %}
