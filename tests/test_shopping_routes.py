@@ -1,7 +1,7 @@
 import pytest
 
 from app.extensions import db
-from app.models import Recipe, RecipeIngredient, User
+from app.models import Recipe, RecipeIngredient, ShoppingList, User
 
 
 def auth_is_wired(app):
@@ -67,11 +67,26 @@ def test_opening_a_list_that_does_not_exist_returns_404(signed_in):
     assert signed_in.get("/shopping/lists/99999").status_code == 404
 
 
-def test_removing_an_item_updates_the_page(signed_in, recipe_id):
+def test_removing_an_item_updates_the_page(signed_in, recipe_id, app):
     signed_in.post(f"/shopping/save/{recipe_id}", follow_redirects=True)
 
-    listing = signed_in.get("/shopping/lists")
-    assert b"Tomato Pasta" in listing.data
+    with app.app_context():
+        shopping_list = ShoppingList.query.one()
+        list_id = shopping_list.id
+        item_id = shopping_list.items[0].id
+
+    before = signed_in.get(f"/shopping/lists/{list_id}")
+    assert b"Tomatoes" in before.data
+
+    removed = signed_in.post(
+        f"/shopping/lists/{list_id}/items/{item_id}/remove",
+        follow_redirects=True,
+    )
+    assert removed.status_code == 200
+    assert b"Tomatoes" not in removed.data
+
+    after = signed_in.get(f"/shopping/lists/{list_id}")
+    assert b"Tomatoes" not in after.data
 
 
 @needs_auth
