@@ -1,6 +1,6 @@
 # Tests for the recipe details page (UC-09, #12)
 from app.extensions import db
-from app.models import Recipe, RecipeIngredient
+from app.models import PantryItem, Recipe, RecipeIngredient, User
 
 
 # Save a recipe in the test database and return it
@@ -76,3 +76,23 @@ def test_search_result_links_to_details_page(client):
     recipe = add_recipe()
     response = client.get("/recipes/?ingredients=pasta")
     assert f'href="/recipes/{recipe.id}"'.encode() in response.data
+
+
+# A logged-in user sees what they have and what is missing (FR-4.3, FR-4.4)
+def test_logged_in_user_sees_have_and_missing(logged_in_client):
+    user = User.query.filter_by(email="test@example.com").first()
+    db.session.add(PantryItem(user_id=user.id, ingredient_name="garlic",
+                              normalized_name="garlic"))
+    db.session.commit()
+    recipe = add_recipe()
+    response = logged_in_client.get(f"/recipes/{recipe.id}")
+    assert b"<strong>You have:</strong> garlic" in response.data
+    assert b"<strong>Missing:</strong> pasta" in response.data
+
+
+# With an empty pantry every ingredient is missing
+def test_empty_pantry_shows_everything_missing(logged_in_client):
+    recipe = add_recipe()
+    response = logged_in_client.get(f"/recipes/{recipe.id}")
+    assert b"none of these yet" in response.data
+    assert b"<strong>Missing:</strong> pasta, garlic" in response.data
