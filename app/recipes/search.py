@@ -110,3 +110,21 @@ def rank_recipes(user_ingredients, recipes):
         results,
         key=lambda result: (-result.score, -len(result.matched), result.title.casefold()),
     )
+
+
+def search_with_pantry(pantry_names, recipes):
+    """Rank recipes against the user's pantry and say which UC-07 case applies.
+
+    pantry_names are the pantry items' stored normalized names, one per item.
+    They are not parsed as comma-separated text: "salt, pepper" stays one name.
+    Blank names and repeats are dropped. With nothing left the result is
+    empty_pantry and recipes is never read; if no recipe shares an ingredient
+    it is no_matches; otherwise ok with the same ranking as rank_recipes().
+    """
+    names = list(dict.fromkeys(name for name in pantry_names if name and name.strip()))
+    if not names:
+        return PantrySearchResult(STATUS_EMPTY_PANTRY)
+    results = rank_recipes(names, recipes)
+    if not results:
+        return PantrySearchResult(STATUS_NO_MATCHES)
+    return PantrySearchResult(STATUS_OK, results)
