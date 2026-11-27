@@ -25,6 +25,9 @@
         <li>{{ name }}</li>
       {% endfor %}
     </ul>
+    {% if current_user.is_authenticated %}
+      <a class="button" href="{{ url_for('shopping.generate', recipe_id=recipe.id) }}">Make shopping list</a>
+    {% endif %}
   </section>
 
   <section class="card">

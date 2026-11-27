@@ -54,3 +54,18 @@ def test_logged_in_user_has_no_guest_note(logged_in_client):
     recipe = add_recipe()
     response = logged_in_client.get(f"/recipes/{recipe.id}")
     assert b"Log in to see which ingredients you already have" not in response.data
+
+
+# A logged-in user can make a shopping list from the recipe (UC-11)
+def test_logged_in_user_sees_shopping_list_button(logged_in_client):
+    recipe = add_recipe()
+    response = logged_in_client.get(f"/recipes/{recipe.id}")
+    assert b"Make shopping list" in response.data
+    assert f"/shopping/generate/{recipe.id}".encode() in response.data
+
+
+# A guest does not see the shopping list button
+def test_guest_has_no_shopping_list_button(client):
+    recipe = add_recipe()
+    response = client.get(f"/recipes/{recipe.id}")
+    assert b"Make shopping list" not in response.data
