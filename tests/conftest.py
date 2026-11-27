@@ -13,6 +13,9 @@ def app():
     from app.extensions import db
 
     app = create_app("testing")
+    # Session protection rejects test sessions that carry no identifier;
+    # production keeps the "strong" setting from app/extensions.py.
+    app.login_manager.session_protection = None
     with app.app_context():
         db.create_all()
         yield app

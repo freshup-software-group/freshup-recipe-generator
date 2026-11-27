@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Your saved shopping lists</h1>
+
+{% if lists %}
+  <ul>
+    {% for shopping_list in lists %}
+      <li>
+        <a href="{{ url_for('shopping.detail', list_id=shopping_list.id) }}">
+          {{ shopping_list.recipe_title or shopping_list.name }}
+        </a>
+        — {{ shopping_list.items | length }} item(s)
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>You have not saved any shopping lists yet.</p>
+{% endif %}
+{% endblock %}

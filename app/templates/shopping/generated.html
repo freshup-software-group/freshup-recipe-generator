@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Shopping list for {{ result.recipe_title }}</h1>
+
+{% if result.complete %}
+  <p>You already have everything you need for this recipe.</p>
+{% else %}
+  <p>You are missing {{ result.missing | length }} ingredient(s):</p>
+  <ul>
+    {% for item in result.missing %}
+      <li>
+        {{ item.ingredient_name }}
+        {%- if item.quantity %} — {{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %}{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if current_user.is_authenticated %}
+    <form method="post" action="{{ url_for('shopping.save', recipe_id=result.recipe_id) }}">
+      <button type="submit">Save this list</button>
+    </form>
+  {% else %}
+    <p>Log in to save this list to your account.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}
