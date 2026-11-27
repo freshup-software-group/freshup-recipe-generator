@@ -9,16 +9,16 @@
 <body>
   <header class="site-header">
     <nav class="nav">
-      <a class="nav-brand" href="/">Freshup</a>
+      <a class="nav-brand" href="{{ url_for('index') }}">Freshup</a>
       <ul class="nav-links">
-        <li><a href="/recipes/">Search recipes</a></li>
+        <li><a href="{{ url_for('recipes.search') }}">Search recipes</a></li>
         {% if current_user and current_user.is_authenticated %}
-          <li><a href="/pantry/">My pantry</a></li>
-          <li><a href="/shopping/">Shopping lists</a></li>
-          <li><a href="/auth/logout">Log out</a></li>
+          {% if has_endpoint('pantry.index') %}<li><a href="{{ url_for('pantry.index') }}">My pantry</a></li>{% endif %}
+          <li><a href="{{ url_for('shopping.index') }}">Shopping lists</a></li>
+          {% if has_endpoint('auth.logout') %}<li><a href="{{ url_for('auth.logout') }}">Log out</a></li>{% endif %}
         {% else %}
-          <li><a href="/auth/login">Log in</a></li>
-          <li><a href="/auth/register">Register</a></li>
+          {% if has_endpoint('auth.login') %}<li><a href="{{ url_for('auth.login') }}">Log in</a></li>{% endif %}
+          {% if has_endpoint('auth.register') %}<li><a href="{{ url_for('auth.register') }}">Register</a></li>{% endif %}
         {% endif %}
       </ul>
     </nav>

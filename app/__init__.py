@@ -55,4 +55,11 @@ def create_app(config_name=None):
     from .recipe_loader import load_recipes_command
     app.cli.add_command(load_recipes_command)
 
+    # Let templates check that a route exists before linking to it (F7.1)
+    @app.context_processor
+    def route_helpers():
+        def has_endpoint(name):
+            return name in app.view_functions
+        return {"has_endpoint": has_endpoint}
+
     return app
