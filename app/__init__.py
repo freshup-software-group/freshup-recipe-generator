@@ -1,7 +1,7 @@
 """Application factory."""
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 
 from .config import config_by_name
 from .extensions import db, login_manager
@@ -38,7 +38,8 @@ def create_app(config_name=None):
 
     @app.route("/")
     def index():
-        return "Freshup Recipe Generator is running."
+        # Home page with links to core functions (NFR-1.1, NFR-1.3)
+        return render_template("index.html")
 
     @app.cli.command("init-db")
     def init_db():
@@ -53,5 +54,12 @@ def create_app(config_name=None):
     # Register the flask load-recipes command (F6)
     from .recipe_loader import load_recipes_command
     app.cli.add_command(load_recipes_command)
+
+    # Let templates check that a route exists before linking to it (F7.1)
+    @app.context_processor
+    def route_helpers():
+        def has_endpoint(name):
+            return name in app.view_functions
+        return {"has_endpoint": has_endpoint}
 
     return app

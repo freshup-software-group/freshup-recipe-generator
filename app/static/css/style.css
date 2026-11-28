@@ -143,3 +143,15 @@ button:hover {
   font-size: 0.875rem;
   padding: 2rem 1rem;
 }
+
+/* Home page cards (F7.1, #27) */
+.home-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.home-note {
+  margin-top: 1.5rem;
+}
