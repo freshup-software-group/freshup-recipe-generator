@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Freshup Recipe Generator{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h1>Find recipes with what you already have</h1>
+    <p>Add the ingredients in your kitchen, find recipes you can make, and get a shopping list for anything missing.</p>
+  </section>
+
+  {# Pages behind login only show once the user is logged in or can log in #}
+  {% set can_open_private = current_user.is_authenticated or has_endpoint('auth.login') %}
+
+  <div class="home-links">
+    <div class="card">
+      <h2>Search recipes</h2>
+      <p>Enter ingredients and see matching recipes.</p>
+      <a class="button" href="{{ url_for('recipes.search') }}">Search recipes</a>
+    </div>
+    {% if can_open_private and has_endpoint('pantry.index') %}
+    <div class="card">
+      <h2>My pantry</h2>
+      <p>Keep track of the ingredients you have at home.</p>
+      <a class="button" href="{{ url_for('pantry.index') }}">Go to my pantry</a>
+    </div>
+    {% endif %}
+    {% if can_open_private %}
+    <div class="card">
+      <h2>Shopping lists</h2>
+      <p>Save the ingredients you still need to buy.</p>
+      <a class="button" href="{{ url_for('shopping.index') }}">View shopping lists</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if not current_user.is_authenticated and has_endpoint('auth.register') and has_endpoint('auth.login') %}
+    <p class="home-note">
+      New here? <a href="{{ url_for('auth.register') }}">Create an account</a> or
+      <a href="{{ url_for('auth.login') }}">log in</a> to save your pantry and shopping lists.
+    </p>
+  {% endif %}
+{% endblock %}
