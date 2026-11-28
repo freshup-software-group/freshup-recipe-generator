@@ -32,7 +32,9 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SECRET_KEY = "test-secret"
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL", "sqlite:///:memory:"
+    )
     # Faster hashing in tests; production keeps Werkzeug's default.
     PASSWORD_HASH_METHOD = "pbkdf2:sha256:1000"
 
